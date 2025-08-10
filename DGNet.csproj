@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LiteDB" Version="5.0.21" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="17.14.8" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.14.8" />
+    <PackageReference Include="Mono.Cecil" Version="0.11.6" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    
+    <Compile Remove="integration_testing/**/*.cs" />
+  </ItemGroup>
+  
+  <Target Name="CopyTargetsToDistributionDirectory" AfterTargets="Build">
+    <ItemGroup>
+      <Distributable Include="$(OutDir)/$(AssemblyName).exe" />
+      <Distributable Include="$(OutDir)/$(AssemblyName).dll" />
+      <Distributable Include="$(OutDir)/Newtonsoft.Json.dll" />
+      <Distributable Include="$(OutDir)/Mono.Cecil.dll" />
+      <Distributable Include="$(OutDir)/Mono.Cecil.Mdb.dll" />
+      <Distributable Include="$(OutDir)/Mono.Cecil.Pdb.dll" />
+      <Distributable Include="$(OutDir)/Mono.Cecil.Rocks.dll" />
+      <Distributable Include="$(OutDir)/LiteDB.dll" />
+      <Distributable Include="$(MSBuildThisFileDirectory)/DGNet.targets" />
+    </ItemGroup>
+    
+    <Copy SourceFiles="@(Distributable)" DestinationFolder="$(MSBuildThisFileDirectory)/dist" />
+  </Target>
+
+</Project>

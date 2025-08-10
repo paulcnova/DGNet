@@ -1,0 +1,60 @@
+
+<Project>
+
+  <UsingTask TaskName="GenerateDocumentation" AssemblyFile="$(MSBuildThisFileDirectory)/DGNet.dll" Override="True" />
+  
+  <Target Name="_ResolveCopyLocalNugetPackageXmls" AfterTargets="ResolveReferences">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Include="@(ReferenceCopyLocalPaths->'%(RootDir)%(Directory)%(Filename).xml')" Condition="Exists('%(RootDir)%(Directory)%(Filename).xml')" />
+    </ItemGroup>
+  </Target>
+  
+  <PropertyGroup>
+	<NoWarn Condition="$(ShowDocWarnings) !='true'">$(NoWarn);CS1591</NoWarn>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  
+  <Target Name="GenerateDocumentationForProject" AfterTargets="Build">
+	<PropertyGroup>
+		<DGName Condition="$(DGName) == ''">$(MSBuildProjectName)</DGName>
+		<DGTargets Condition="$(DGTargets) == ''">$(AssemblyName).dll</DGTargets>
+		<DGType Condition="$(DGType) == ''">static-html</DGType>
+		<DGInput Condition="$(DGInput) == ''">$(OutDir)</DGInput>
+		<DGOutput Condition="$(DGOutput) == ''">$(OutDir)\docs\</DGOutput>
+		<!-- <DGTemplate>
+			<Base Condition="$(DGTemplate.Base) == ''"></Base>
+			<Type Condition="$(DGTemplate.Type) == ''"></Type>
+			<Field>
+				<Full Condition="$(DGTemplate.Field.Full) == ''"></Full>
+				<Compact Condition="$(DGTemplate.Field.Compact) == ''"></Compact>
+				<Glance Condition="$(DGTemplate.Field.Glance) == ''"></Glance>
+			</Field>
+			<Property>
+				<Full Condition="$(DGTemplate.Property.Full) == ''"></Full>
+				<Compact Condition="$(DGTemplate.Property.Compact) == ''"></Compact>
+				<Glance Condition="$(DGTemplate.Property.Glance) == ''"></Glance>
+			</Property>
+			<Method>
+				<Full Condition="$(DGTemplate.Method.Full) == ''"></Full>
+				<Compact Condition="$(DGTemplate.Method.Compact) == ''"></Compact>
+				<Glance Condition="$(DGTemplate.Method.Glance) == ''"></Glance>
+			</Method>
+			<Event>
+				<Full Condition="$(DGTemplate.Event.Full) == ''"></Full>
+				<Compact Condition="$(DGTemplate.Event.Compact) == ''"></Compact>
+				<Glance Condition="$(DGTemplate.Event.Glance) == ''"></Glance>
+			</Event>
+		</DGTemplate> -->
+	</PropertyGroup>
+	
+	<GenerateDocumentation
+		ProjectName="$(DGName)"
+		InputPath="$(DGInput)"
+		OutputPath="$(DGOutput)"
+		TargetAssemblyNames="$(DGTargets)"
+		Type="$(DGType)"
+	/>
+		<!-- Template="$(DGTemplate)" -->
+  </Target>
+  
+</Project>
