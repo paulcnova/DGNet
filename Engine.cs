@@ -1,6 +1,9 @@
 
 namespace DGNet;
 
+using DGNet.Inspector;
+using DGNet.Models;
+
 using Mono.Cecil;
 
 using System.Collections.Generic;
@@ -87,7 +90,71 @@ public sealed class Engine : System.IDisposable
 	
 	private void SetupData()
 	{
+		List<AssemblyDefinition> definitions = new List<AssemblyDefinition>();
+		Dictionary<string, List<string>> types = new Dictionary<string, List<string>>();
 		
+		foreach(string assembly in this.Environment.Assemblies)
+		{
+			AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(assembly);
+			
+			definitions.Add(asm);
+		}
+		
+		KnownAssemblyResolver resolver = new KnownAssemblyResolver(definitions);
+		ReaderParameters readerParameters = new ReaderParameters() { AssemblyResolver = resolver };
+		
+		foreach(string assembly in this.Environment.Assemblies)
+		{
+			AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(assembly, readerParameters);
+			int index = System.Math.Max(assembly.LastIndexOf('/'), assembly.LastIndexOf('\\'));
+			string asmName = (index == -1 ? assembly : assembly.Substring(index + 1));
+			
+			if(!types.ContainsKey(asmName))
+			{
+				types.Add(asmName, new List<string>());
+			}
+			this.AssemblyDefinitions.Add(asmName, asm);
+			
+			foreach(ModuleDefinition module in asm.Modules)
+			{
+				foreach(TypeDefinition type in module.GetTypes())
+				{
+					if(type.FullName.Contains('<') && type.FullName.Contains('>'))
+					{
+						continue;
+					}
+					if(this.Environment.IgnorePrivate)
+					{
+						if(type.IsNotPublic) { continue; }
+						if(type.IsNestedAssembly || type.IsNestedPrivate) { continue; }
+						
+						TypeDefinition nestedType = type;
+						
+						while(nestedType.IsNested)
+						{
+							nestedType = nestedType.DeclaringType;
+						}
+						
+						if(nestedType.IsNotPublic) { continue; }
+					}
+					types[asmName].Add(type.FullName);
+					this.TypeDefinitions.Add(type.FullName, type);
+					this.AssemblyMap.Add(type.FullName, asmName);
+					this.Database
+						.Collection<AssemblyMap>()
+						.Insert(new AssemblyMap() {
+							TypeName = type.FullName,
+							AssemblyName = asmName,
+						});
+				}
+			}
+		}
+		this.Database
+			.Collection<AssemblyTypes>()
+			.Insert(types.ToList().ConvertAll(kv => new AssemblyTypes() {
+				AssemblyName = kv.Key,
+				Types = kv.Value,
+			}).ToArray());
 	}
 	
 	#endregion // Private Methods
