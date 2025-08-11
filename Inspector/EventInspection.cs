@@ -1,0 +1,157 @@
+
+namespace DGNet.Inspector;
+
+using Mono.Cecil;
+using Mono.Collections.Generic;
+
+using System.Collections.Generic;
+
+public sealed class EventInspection : Inspection
+{
+	#region Properties
+	
+	/// <summary>Generates an event information from the given event definition</summary>
+	/// <param name="ev">The event definition to gather information from</param>
+	/// <param name="ignorePrivate">Set to false to include all the private properties</param>
+	public EventInspection(EventDefinition ev, bool ignorePrivate = true)
+	{
+		this.Name = ev.Name;
+		this.TypeInfo = new QuickTypeInspection(ev.EventType);
+		this.ImplementedType = new QuickTypeInspection(ev.DeclaringType);
+		this.Adder = new MethodInspection(ev.AddMethod);
+		this.Remover = new MethodInspection(ev.RemoveMethod);
+		
+		if(ignorePrivate && InspectorUtility.GetAccessorId(this.Adder.Accessor, ignorePrivate) == 0)
+		{
+			this.ShouldIgnore = true;
+			this.Path = this.GetXmlNameID();
+			return;
+		}
+		
+		this.Accessor = this.Adder.Accessor;
+		this.Modifier = this.Adder.Modifier;
+		this.IsStatic = this.Adder.IsStatic;
+		this.Attributes = AttributeInspection.CreateArray(ev.CustomAttributes);
+		this.FullDeclaration = $"{this.Accessor} {(
+			this.Modifier != ""
+				? $"{this.Modifier} "
+				: ""
+		)}{this.TypeInfo.Name} {this.Name}";
+		this.Path = this.GetXmlNameID();
+	}
+	
+	#endregion // Properties
+	
+	#region Public Methods
+	
+	/// <summary>Generates an array of event information from the given type and booleans</summary>
+	/// <param name="type">The type to look into</param>
+	/// <param name="recursive">Set to true to recursively look into the base type of the type</param>
+	/// <param name="isStatic">Set to true to look for only static members</param>
+	/// <param name="ignorePrivate">Set to false to include all the private properties</param>
+	/// <returns>Returns the array of event information</returns>
+	public static List<EventInspection> CreateArray(TypeDefinition type, bool recursive, bool isStatic, bool ignorePrivate = true)
+	{
+		if(!recursive)
+		{
+			List<EventInspection> results = CreateArray(type.Events, ignorePrivate);
+			
+			RemoveUnwanted(results, isStatic, true);
+			
+			return results;
+		}
+		
+		List<EventInspection> events = new List<EventInspection>();
+		List<EventInspection> temp;
+		TypeDefinition currType = type;
+		TypeReference baseType;
+		bool isOriginal = true;
+		
+		while(currType != null)
+		{
+			temp = CreateArray(currType.Events, ignorePrivate);
+			RemoveUnwanted(temp, isStatic, isOriginal);
+			if(currType != type)
+			{
+				RemoveDuplicates(temp, events);
+			}
+			events.AddRange(temp);
+			baseType = currType.BaseType;
+			
+			if(baseType == null) { break; }
+			
+			currType = baseType.Resolve();
+			isOriginal = false;
+		}
+		
+		return events;
+	}
+	
+	/// <summary>Generates an array of event information from the given collection of event definitions</summary>
+	/// <param name="events">The collection of event definitions</param>
+	/// <param name="ignorePrivate">Set to false to include all the private properties</param>
+	/// <returns>Returns an array of event information generated</returns>
+	public static List<EventInspection> CreateArray(Collection<EventDefinition> events, bool ignorePrivate = true)
+	{
+		List<EventInspection> results = new List<EventInspection>();
+		
+		foreach(EventDefinition ev in events)
+		{
+			EventInspection info = new EventInspection(ev, ignorePrivate);
+			
+			if(info.ShouldIgnore) { continue; }
+			results.Add(info);
+		}
+		
+		return results;
+	}
+	
+	public override string GetXmlNameID() => $"E:{this.ImplementedType.UnlocalizedName}.{this.Name}";
+	
+	#endregion // Public Methods
+	
+	#region Private Methods
+	
+	/// <summary>Removes any unwanted elements from the array of event information</summary>
+	/// <param name="events">The array of event information to remove from</param>
+	/// <param name="isStatic">Set to true if non-static members should be removed</param>
+	/// <param name="isOriginal">Set to false if it's a base type, this will remove any private members</param>
+	public static void RemoveUnwanted(List<EventInspection> events, bool isStatic, bool isOriginal)
+	{
+		for(int i = events.Count - 1; i >= 0; i--)
+		{
+			if(events[i].ShouldIgnore)
+			{
+				events.RemoveAt(i);
+			}
+			else if(events[i].IsStatic != isStatic)
+			{
+				events.RemoveAt(i);
+			}
+			else if(!isOriginal && events[i].Accessor == "private")
+			{
+				events.RemoveAt(i);
+			}
+		}
+	}
+	
+	/// <summary>Removes the duplicates from the given array of events</summary>
+	/// <param name="events">The array of event information that will be removed from</param>
+	/// <param name="listEvents">The list of recursive-ordered event information to determine if there is any duplicates</param>
+	public static void RemoveDuplicates(List<EventInspection> events, List<EventInspection> listEvents)
+	{
+		for(int i = events.Count - 1; i >= 0; i--)
+		{
+			foreach(EventInspection ev in listEvents)
+			{
+				if(events[i].Name == ev.Name)
+				{
+					events.RemoveAt(i);
+					break;
+				}
+			}
+		}
+	}
+	
+	#endregion // Private Methods
+}

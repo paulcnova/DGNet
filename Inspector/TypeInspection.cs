@@ -1,0 +1,367 @@
+
+namespace DGNet.Inspector;
+
+using Mono.Cecil;
+using Mono.Collections.Generic;
+
+using System.Collections.Generic;
+
+public sealed class TypeInspection : Inspection
+{
+	#region Properties
+	
+	public TypeInspection(string typeName, Engine engine) : this(
+		engine.GetAssemblyDefinition(typeName),
+		engine.TypeDefinitions[typeName],
+		engine.Environment.Assemblies,
+		engine.Environment.IgnorePrivate
+	) {}
+	
+	public TypeInspection(AssemblyDefinition asm, TypeDefinition type, string[] assemblies, bool ignorePrivate = true)
+	{
+		if(type.IsPublic || type.IsNestedPublic) { this.Accessor = "public"; }
+		else if(type.IsNestedAssembly) { this.Accessor = "internal"; }
+		else if(type.IsNestedFamily) { this.Accessor = "protected"; }
+		else if(type.IsNestedPrivate) { this.Accessor = "private"; }
+		else { this.Accessor = "internal"; }
+		
+		if(ignorePrivate && InspectorUtility.GetAccessorId(this.Accessor, ignorePrivate) == 0)
+		{
+			this.ShouldIgnore = true;
+			return;
+		}
+		
+		this.TypeInfo = new QuickTypeInspection(type);
+		this.HasDeclaringType = type.DeclaringType != null;
+		this.ImplementedType = this.HasDeclaringType ? new QuickTypeInspection(type.DeclaringType) : null;
+		this.AssemblyName = asm.Name.Name;
+		if(type.BaseType != null)
+		{
+			switch(type.BaseType.FullName)
+			{
+				case "System.Enum":
+				case "System.ValueType":
+				case "System.Object":
+					this.BaseType = new QuickTypeInspection();
+					break;
+				default:
+					this.BaseType = new QuickTypeInspection(type.BaseType);
+					break;
+			}
+		}
+		else
+		{
+			this.BaseType = new QuickTypeInspection();
+		}
+		this.IsDelegate = this.BaseType != null && this.BaseType.FullName == "System.MulticastDelegate";
+		this.IsNested = type.IsNested;
+		
+		// ObjectType
+		if(this.IsDelegate) { this.ObjectType = "delegate"; }
+		else if(type.IsEnum) { this.ObjectType = "enum"; }
+		else if(type.IsValueType) { this.ObjectType = "struct"; }
+		else if(type.IsInterface) { this.ObjectType = "interface"; }
+		else { this.ObjectType = "class"; }
+		
+		// Modifier
+		if(this.IsDelegate || type.IsValueType || type.IsInterface) { this.Modifier = ""; }
+		else if(type.IsSealed && type.IsAbstract) { this.Modifier = "static"; }
+		else
+		{
+			this.Modifier = type.IsSealed
+				? "sealed"
+				: type.IsAbstract
+					? "abstract"
+					: "";
+		}
+		this.IsStatic = this.Modifier == "static";
+		this.IsAbstract = this.Modifier == "abstract";
+		this.IsSealed = this.Modifier == "sealed";
+		this.Attributes = AttributeInspection.CreateArray(type.CustomAttributes);
+		this.Interfaces = this.GetInterfaceData(type.Interfaces, assemblies, ignorePrivate);
+		this.Declaration = $"{this.Accessor} {(
+			this.Modifier != ""
+				? $"{this.Modifier} "
+				: ""
+		)}{this.ObjectType} {(
+			this.IsDelegate
+				? $"{this.GetDelegateReturnType(type)} "
+				: ""
+		)}{this.TypeInfo.Name}";
+		this.FullDeclaration = this.GetFullDeclaration(type);
+		
+		// TODO: Have an option to not be recursive.
+		this.Fields.AddRange(FieldInspection.CreateArray(type, true, false, ignorePrivate));
+		this.Fields.AddRange(FieldInspection.CreateArray(type, true, true, ignorePrivate));
+		
+		this.Properties.AddRange(PropertyInspection.CreateArray(type, true, false, ignorePrivate));
+		this.Properties.AddRange(PropertyInspection.CreateArray(type, true, true, ignorePrivate));
+		
+		this.Events.AddRange(EventInspection.CreateArray(type, true, false, ignorePrivate));
+		this.Events.AddRange(EventInspection.CreateArray(type, true, true, ignorePrivate));
+		
+		this.Methods.AddRange(MethodInspection.CreateArray(type, false, false, true, ignorePrivate: ignorePrivate));
+		this.Methods.AddRange(MethodInspection.CreateArray(type, true, false, ignorePrivate: ignorePrivate));
+		this.Methods.AddRange(MethodInspection.CreateArray(type, true, true, ignorePrivate: ignorePrivate));
+		this.Methods.AddRange(MethodInspection.CreateArray(type, true, true, false, true, ignorePrivate: ignorePrivate));
+	}
+	
+	#endregion // Properties
+	
+	#region Public Methods
+	
+	public override string GetXmlNameID() => $"T:{this.TypeInfo.UnlocalizedName}";
+	
+	public static TypeDefinition SearchDefinition(string typePath, string[] assemblies, bool ignorePrivate = true)
+	{
+		foreach(string assembly in assemblies)
+		{
+			AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(assembly);
+			
+			foreach(ModuleDefinition module in asm.Modules)
+			{
+				TypeDefinition type = module.GetType(typePath);
+				
+				if(type != null)
+				{
+					return type;
+				}
+			}
+		}
+		try
+		{
+			System.Type sysType = System.Type.GetType(typePath, true);
+			AssemblyDefinition _asm = AssemblyDefinition.ReadAssembly(
+				sysType.Assembly.Location.Replace("file:///", "")
+			);
+			
+			foreach(ModuleDefinition _module in _asm.Modules)
+			{
+				TypeDefinition _type = _module.GetType(typePath);
+				
+				if(_type != null)
+				{
+					return _type;
+				}
+			}
+		}
+		catch
+		{
+			foreach(string assembly in assemblies)
+			{
+				AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(assembly);
+				
+				foreach(ModuleDefinition module in asm.Modules)
+				{
+					foreach(TypeDefinition type in module.GetTypes())
+					{
+						string strType = type.FullName.Replace("/", ".");
+						
+						if(typePath == strType)
+						{
+							return type;
+						}
+					}
+				}
+			}
+		}
+		
+		return null;
+	}
+	
+	public static TypeInspection Search(string typePath, string[] assemblies, bool ignorePrivate = true)
+	{
+		foreach(string assembly in assemblies)
+		{
+			AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(assembly);
+			
+			foreach(ModuleDefinition module in asm.Modules)
+			{
+				TypeDefinition type = module.GetType(typePath);
+				
+				if(type != null)
+				{
+					return new TypeInspection(asm, type, assemblies, ignorePrivate);
+				}
+			}
+		}
+		try
+		{
+			System.Type sysType = System.Type.GetType(typePath, true);
+			AssemblyDefinition _asm = AssemblyDefinition.ReadAssembly(
+				sysType.Assembly.Location.Replace("file:///", "")
+			);
+			
+			foreach(ModuleDefinition _module in _asm.Modules)
+			{
+				TypeDefinition _type = _module.GetType(typePath);
+				
+				if(_type != null)
+				{
+					return new TypeInspection(_asm, _type, assemblies, ignorePrivate);
+				}
+			}
+		}
+		catch
+		{
+			foreach(string assembly in assemblies)
+			{
+				AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(assembly);
+				
+				foreach(ModuleDefinition module in asm.Modules)
+				{
+					foreach(TypeDefinition type in module.GetTypes())
+					{
+						string strType = type.FullName.Replace("/", ".");
+						
+						if(typePath == strType)
+						{
+							return new TypeInspection(asm, type, assemblies, ignorePrivate);
+						}
+					}
+				}
+			}
+		}
+		
+		return null;
+	}
+	
+	#endregion // Public Methods
+	
+	#region Private Methods
+	
+	private MethodInspection FindInvokeMethod(TypeDefinition type)
+	{
+		foreach(MethodDefinition method in type.Methods)
+		{
+			if(method.Name == "Invoke")
+			{
+				return new MethodInspection(method, false);
+			}
+		}
+		return null;
+	}
+	
+	/// <summary>Gets the full declaration of the type</summary>
+	/// <param name="type">The type definition to look into</param>
+	/// <returns>Returns the full declaration of the type</returns>
+	private string GetFullDeclaration(TypeDefinition type)
+	{
+		if(this.IsDelegate)
+		{
+			MethodInspection invoke = this.FindInvokeMethod(type);
+			
+			if(invoke != null)
+			{
+				return $"{this.Declaration}({invoke.ParameterDeclaration}){InspectorUtility.GetGenericParameterConstraints(this.TypeInfo.GenericParameters)}";
+			}
+		}
+		
+		bool hasInheritance = !string.IsNullOrEmpty(this.BaseType.FullName) || this.Interfaces.Count > 0;
+		string decl;
+		
+		if(this.TypeInfo.GenericParameters.Count > 0)
+		{
+			decl = $"{this.Declaration}<{string.Join(", ", this.TypeInfo.GenericParameters.ConvertAll(gp => gp.UnlocalizedName))}>";
+		}
+		else
+		{
+			decl = this.Declaration;
+		}
+		decl += hasInheritance ? " : " : "";
+		
+		if(this.BaseType.FullName != "")
+		{
+			decl += $"{this.BaseType.FullName}{(this.Interfaces.Count > 0 ? ", " : "")}";
+		}
+		if(this.Interfaces.Count > 0)
+		{
+			for(int i = 0; i < this.Interfaces.Count; ++i)
+			{
+				decl += $"{this.Interfaces[i].Name}{(i != this.Interfaces.Count - 1 ? ", " : "")}";
+			}
+			decl += InspectorUtility.GetGenericParameterConstraints(this.TypeInfo.GenericParameters);
+		}
+		
+		return decl;
+	}
+	
+	private string GetDelegateReturnType(TypeDefinition type)
+	{
+		MethodInspection invoke = this.FindInvokeMethod(type);
+		
+		if(invoke == null) { return ""; }
+		
+		return invoke.ReturnType.Name;
+	}
+	
+	/// <summary>Generates an array of interface information</summary>
+	/// <param name="interfaces">The collection of interface implementations</param>
+	/// <param name="assemblies">The assemblies to get the interface data from.</param>
+	/// <param name="ignorePrivate">Set to false to include all the private properties</param>
+	/// <returns>Returns an array of interface information</returns>
+	private List<QuickTypeInspection> GetInterfaceData(Collection<InterfaceImplementation> interfaces, string[] assemblies, bool ignorePrivate = true)
+	{
+		List<QuickTypeInspection> results = new List<QuickTypeInspection>();
+		
+		foreach(InterfaceImplementation iFace in interfaces)
+		{
+			QuickTypeInspection info = new QuickTypeInspection(iFace.InterfaceType);
+			
+			if(ignorePrivate && !this.IsTypePublic(info.UnlocalizedName, assemblies))
+			{
+				continue;
+			}
+			results.Add(info);
+		}
+		
+		return results;
+	}
+	
+	/// <summary>Finds if the type is a public type</summary>
+	/// <param name="typePath">The type path to look into</param>
+	/// <param name="assemblies">The list of assemblies to look into</param>
+	/// <returns>Returns true if the type is public</returns>
+	private bool IsTypePublic(string typePath, string[] assemblies)
+	{
+		foreach(string assembly in assemblies)
+		{
+			AssemblyDefinition asm = AssemblyDefinition.ReadAssembly(assembly);
+			
+			foreach(ModuleDefinition module in asm.Modules)
+			{
+				TypeDefinition type = module.GetType(typePath);
+				
+				if(type != null)
+				{
+					return type.IsPublic;
+				}
+			}
+		}
+		try
+		{
+			System.Type sysType = System.Type.GetType(typePath, true);
+			AssemblyDefinition _asm = AssemblyDefinition.ReadAssembly(
+				sysType.Assembly.Location.Replace("file:///", "")
+			);
+			
+			foreach(ModuleDefinition _module in _asm.Modules)
+			{
+				TypeDefinition _type = _module.GetType(typePath);
+				
+				if(_type != null)
+				{
+					return _type.IsPublic;
+				}
+			}
+		}
+		catch(System.Exception e)
+		{
+			System.Console.WriteLine(e);
+		}
+		
+		return false;
+	}
+	
+	#endregion // Private Methods
+}

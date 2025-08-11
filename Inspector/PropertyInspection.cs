@@ -1,0 +1,361 @@
+
+namespace DGNet.Inspector;
+
+using Mono.Cecil;
+using Mono.Collections.Generic;
+
+using System.Collections.Generic;
+
+public sealed class PropertyInspection : Inspection
+{
+	#region Properties
+	
+	public PropertyInspection(PropertyDefinition property, bool ignorePrivate = true)
+	{
+		this.HasGetter = property.GetMethod != null;
+		this.HasSetter = property.SetMethod != null;
+		this.Getter = this.HasGetter
+			? new MethodInspection(property.GetMethod)
+			: null;
+		this.Setter = this.HasSetter
+			? new MethodInspection(property.SetMethod)
+			: null;
+		if(this.Getter != null && InspectorUtility.GetAccessorId(this.Getter.Accessor, true) == 0)
+		{
+			this.Getter = null;
+			this.HasGetter = false;
+		}
+		if(this.Setter != null && InspectorUtility.GetAccessorId(this.Setter.Accessor, ignorePrivate) == 0)
+		{
+			this.Setter = null;
+			this.HasSetter = false;
+		}
+		if(!this.HasGetter && !this.HasSetter)
+		{
+			this.ShouldIgnore = true;
+			this.Path = this.GetXmlNameID();
+			return;
+		}
+		
+		this.Name = property.Name;
+		this.PartialFullName = property.FullName.Split("::")[1].Replace(",", ", ");
+		this.IsStatic = !property.HasThis;
+		this.Attributes = AttributeInspection.CreateArray(property.CustomAttributes);
+		this.Parameters = ParameterInspection.CreateArray(property.Parameters);
+		this.Accessor = this.GetAccessor();
+		this.TypeInfo = new QuickTypeInspection(property.PropertyType);
+		
+		if(!property.HasThis) { this.Modifier = "static"; }
+		else { this.Modifier = this.GetModifier(); }
+		
+		this.ImplementedType = new QuickTypeInspection(property.DeclaringType);
+		this.GetSetDeclaration = this.GetGetSetDeclaration(ignorePrivate);
+		this.Declaration = $"{this.Accessor} {(
+			this.Modifier != ""
+				? $"{this.Modifier} "
+				: ""
+		)}{this.TypeInfo.Name} {(this.Parameters.Count == 0 ? this.Name : "this")}";
+		this.ParameterDeclaration = string.Join(", ", this.GetParameterDeclaration());
+		this.FullDeclaration = $"{this.Declaration}{(
+			this.ParameterDeclaration != ""
+				? $"[{this.ParameterDeclaration}]"
+				: ""
+		)} {{ {this.GetSetDeclaration}}}";
+		this.Path = this.GetXmlNameID();
+	}
+	
+	public PropertyInspection(PropertyDefinition property, TypeDefinition type, TypeDefinition boundType, TypeReference boundTypeRef, bool ignorePrivate = true)
+	{
+		
+		this.HasGetter = property.GetMethod != null;
+		this.HasSetter = property.SetMethod != null;
+		this.Getter = this.HasGetter
+			? new MethodInspection(type, boundType, boundTypeRef, property.GetMethod)
+			: null;
+		this.Setter = this.HasSetter
+			? new MethodInspection(type, boundType, boundTypeRef, property.SetMethod)
+			: null;
+		if(this.Getter != null && InspectorUtility.GetAccessorId(this.Getter.Accessor, true) == 0)
+		{
+			this.Getter = null;
+			this.HasGetter = false;
+		}
+		if(this.Setter != null && InspectorUtility.GetAccessorId(this.Setter.Accessor, ignorePrivate) == 0)
+		{
+			this.Setter = null;
+			this.HasSetter = false;
+		}
+		if(!this.HasGetter && !this.HasSetter)
+		{
+			this.ShouldIgnore = true;
+			this.Path = this.GetXmlNameID();
+			return;
+		}
+		
+		this.Name = property.Name;
+		this.PartialFullName = property.FullName.Split("::")[1].Replace(",", ", ");
+		this.IsStatic = !property.HasThis;
+		this.Attributes = AttributeInspection.CreateArray(property.CustomAttributes);
+		this.Parameters = ParameterInspection.CreateArray(property.Parameters);
+		this.Accessor = this.GetAccessor();
+		
+		if(this.HasGetter)
+		{
+			this.TypeInfo = this.Getter.ReturnType;
+			this.Parameters = this.Getter.Parameters;
+		}
+		else
+		{
+			this.TypeInfo = this.Setter.Parameters[this.Setter.Parameters.Count - 1].TypeInfo;
+			this.Parameters = new List<ParameterInspection>(this.Setter.Parameters);
+		}
+		
+		if(!property.HasThis) { this.Modifier = "static"; }
+		else { this.Modifier = this.GetModifier(); }
+		
+		this.ImplementedType = new QuickTypeInspection(property.DeclaringType);
+		this.GetSetDeclaration = this.GetGetSetDeclaration(ignorePrivate);
+		this.Declaration = $"{this.Accessor} {(
+			this.Modifier != ""
+				? $"{this.Modifier} "
+				: ""
+		)}{this.TypeInfo.Name} {(this.Parameters.Count == 0 ? this.Name : "this")}";
+		this.ParameterDeclaration = string.Join(", ", this.GetParameterDeclaration());
+		this.FullDeclaration = $"{this.Declaration}{(
+			this.ParameterDeclaration != ""
+				? $"[{this.ParameterDeclaration}]"
+				: ""
+		)} {{ {this.GetSetDeclaration}}}";
+		this.Path = this.GetXmlNameID();
+	}
+	
+	#endregion // Properties
+	
+	#region Public Methods
+	
+	/// <summary>Generates an array of property information from the given type and booleans</summary>
+	/// <param name="type">The type to gather information from</param>
+	/// <param name="recursive">Set to true to recursively look through base types</param>
+	/// <param name="isStatic">Set to true to record only static members</param>
+	/// <param name="ignorePrivate">Set to false to include all the private properties</param>
+	/// <returns>Returns an array of property information</returns>
+	public static List<PropertyInspection> CreateArray(TypeDefinition type, bool recursive, bool isStatic, bool ignorePrivate = true)
+	{
+		if(!recursive)
+		{
+			List<PropertyInspection> results = CreateArray(type.Properties, ignorePrivate);
+			
+			RemoveUnwanted(results, isStatic, true);
+			
+			return results;
+		}
+		
+		List<PropertyInspection> properties = new List<PropertyInspection>();
+		List<PropertyInspection> temp = new List<PropertyInspection>();
+		TypeDefinition currType = type;
+		TypeReference currTypeRef = type.Resolve();
+		TypeReference baseType;
+		bool isOriginal = true;
+		
+		while(currType != null)
+		{
+			if(currTypeRef.IsGenericInstance)
+			{
+				temp = CreateArray(currType.Properties, type, currType, currTypeRef, ignorePrivate);
+			}
+			else
+			{
+				temp = CreateArray(currType.Properties, ignorePrivate);
+			}
+			RemoveUnwanted(temp, isStatic, isOriginal);
+			if(currType != type)
+			{
+				RemoveDuplicates(temp, properties);
+			}
+			properties.AddRange(temp);
+			baseType = currType.BaseType;
+			
+			if(baseType == null) { break; }
+			
+			currTypeRef = baseType;
+			currType = baseType.Resolve();
+			isOriginal = false;
+		}
+		
+		return properties;
+	}
+	
+	/// <summary>Generates an array of property information from the given collection of property definitions</summary>
+	/// <param name="properties">The collection of property definitions</param>
+	/// <param name="ignorePrivate">Set to false to include all the private properties</param>
+	/// <returns>Returns an array of property information</returns>
+	public static List<PropertyInspection> CreateArray(Collection<PropertyDefinition> properties, bool ignorePrivate = true)
+	{
+		List<PropertyInspection> results = new List<PropertyInspection>();
+		
+		foreach(PropertyDefinition property in properties)
+		{
+			PropertyInspection info = new PropertyInspection(property, ignorePrivate);
+			
+			if(info.ShouldIgnore) { continue; }
+			
+			results.Add(info);
+		}
+		
+		return results;
+	}
+	
+	public static List<PropertyInspection> CreateArray(Collection<PropertyDefinition> properties, TypeDefinition type, TypeDefinition boundType, TypeReference boundTypeRef, bool ignorePrivate = true)
+	{
+		List<PropertyInspection> results = new List<PropertyInspection>();
+		
+		foreach(PropertyDefinition property in properties)
+		{
+			PropertyInspection info = new PropertyInspection(property, type, boundType, boundTypeRef, ignorePrivate);
+			
+			if(info.ShouldIgnore) { continue; }
+			
+			results.Add(info);
+		}
+		
+		return results;
+	}
+	
+	public override string GetXmlNameID()
+	{
+		string typePath = $"P:{this.ImplementedType.UnlocalizedName}.{this.Name}";
+		
+		if(this.Parameters.Count > 0)
+		{
+			List<string> parameters = new List<string>();
+			
+			foreach(ParameterInspection parameter in this.Parameters)
+			{
+				parameters.Add(parameter.TypeInfo.FullName);
+			}
+			
+			return $"{typePath}({string.Join(',', parameters)})";
+		}
+		return typePath;
+	}
+	
+	#endregion // Public Methods
+	
+	#region Private Methods
+	
+	/// <summary>Gets the get / set declaration of the property</summary>
+	/// <returns>Returns the get / set declaration of the property</returns>
+	private string GetGetSetDeclaration(bool ignorePrivate)
+	{
+		int infoId = InspectorUtility.GetAccessorId(this.Accessor, ignorePrivate);
+		int getterId = this.Getter != null
+			? InspectorUtility.GetAccessorId(this.Getter.Accessor, ignorePrivate)
+			: 0;
+		int setterId = this.Setter != null
+			? InspectorUtility.GetAccessorId(this.Setter.Accessor, ignorePrivate)
+			: 0;
+		string declaration = "";
+		
+		if(getterId >= infoId) { declaration = "get;"; }
+		else if(getterId > 0) { declaration = $"{InspectorUtility.GetAccessorFromId(getterId)} get;"; }
+		
+		if(setterId >= infoId)
+		{
+			declaration += $"{(declaration != "" ? " " : "")}set;";
+		}
+		else if(setterId > 0)
+		{
+			declaration += $"{(declaration != "" ? " " : "")}{InspectorUtility.GetAccessorFromId(setterId)} set;";
+		}
+		
+		return declaration;
+	}
+	
+	/// <summary>Removes any unwanted elements within the array of property information</summary>
+	/// <param name="properties">The array of property information to remove from</param>
+	/// <param name="isStatic">Set to true to remove all non-static members</param>
+	/// <param name="isOriginal">Set to false if it's a base type, this will remove any private members</param>
+	private static void RemoveUnwanted(List<PropertyInspection> properties, bool isStatic, bool isOriginal)
+	{
+		for(int i = properties.Count - 1; i >= 0; i--)
+		{
+			if(properties[i].ShouldIgnore)
+			{
+				properties.RemoveAt(i);
+			}
+			else if(properties[i].IsStatic != isStatic)
+			{
+				properties.RemoveAt(i);
+			}
+			else if(!isOriginal && properties[i].Accessor == "private")
+			{
+				properties.RemoveAt(i);
+			}
+		}
+	}
+	
+	/// <summary>Removes any duplicates from the array of property information</summary>
+	/// <param name="properties">The array of property information to remove from</param>
+	/// <param name="listProperties">The list of properties recursive-ordered to reference if there are any duplicates</param>
+	private static void RemoveDuplicates(List<PropertyInspection> properties, List<PropertyInspection> listProperties)
+	{
+		for(int i = properties.Count - 1; i >= 0; i--)
+		{
+			foreach(PropertyInspection property in listProperties)
+			{
+				if(properties[i].PartialFullName == property.PartialFullName)
+				{
+					properties.RemoveAt(i);
+					break;
+				}
+			}
+		}
+	}
+	
+	/// <summary>Gets the accessor from the getter or setter methods</summary>
+	/// <returns>Returns the accessor</returns>
+	private string GetAccessor()
+	{
+		int getterId = this.Getter != null
+			? InspectorUtility.GetAccessorId(this.Getter.Accessor, false)
+			: 0;
+		int setterId = this.Setter != null
+			? InspectorUtility.GetAccessorId(this.Setter.Accessor, false)
+			: 0;
+		
+		return InspectorUtility.GetAccessorFromId(System.Math.Max(getterId, setterId));
+	}
+	
+	/// <summary>Gets the modifier of the property from either the getter or the setting</summary>
+	/// <returns>Returns the modifier of the property</returns>
+	private string GetModifier()
+	{
+		int getterId = this.Getter != null
+			? InspectorUtility.GetAccessorId(this.Getter.Accessor, false)
+			: 0;
+		int setterId = this.Setter != null
+			? InspectorUtility.GetAccessorId(this.Setter.Accessor, false)
+			: 0;
+		
+		if(getterId != 0 && getterId >= setterId) { return this.Getter.Modifier; }
+		else if(setterId != 0 && setterId >= getterId) { return this.Setter.Modifier; }
+		
+		return "";
+	}
+	
+	/// <summary>Gets an array of parameter declarations</summary>
+	/// <returns>Returns the array of parameter declarations</returns>
+	private List<string> GetParameterDeclaration()
+	{
+		List<string> declarations = new List<string>();
+		
+		foreach(ParameterInspection parameter in this.Parameters)
+		{
+			declarations.Add(parameter.FullDeclaration);
+		}
+		
+		return declarations;
+	}
+	
+	#endregion // Private Methods
+}
