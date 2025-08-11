@@ -24,6 +24,8 @@ public class GenerateDocumentation : Task
 	
 	public override bool Execute()
 	{
+		Logger.LogHelper = this.Log;
+		
 		ProjectEnvironment environment = this.GetEnvironment();
 		
 		using(Engine engine = new Engine(environment))

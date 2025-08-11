@@ -1,8 +1,6 @@
 
 namespace DGNet.Inspector;
 
-using LiteDB;
-
 using Mono.Cecil;
 using Mono.Collections.Generic;
 
@@ -12,7 +10,7 @@ public class ParameterInspection
 {
 	#region Properties
 	
-	[BsonId] public string Path { get; set; }
+	public string Path { get; set; }
 	
 	/// <summary>The name of the parameter</summary>
 	public string Name { get; set; }
@@ -21,7 +19,7 @@ public class ParameterInspection
 	public string DefaultValue { get; set; }
 	
 	/// <summary>The list of attributes that the parameter contains</summary>
-	[BsonRef(nameof(AttributeInspection))] public List<AttributeInspection> Attributes { get; set; } = new List<AttributeInspection>();
+	public List<AttributeInspection> Attributes { get; set; } = new List<AttributeInspection>();
 	
 	/// <summary>Any modifiers to the parameter (such as ref, in, out, params, etc.)</summary>
 	public string Modifier { get; set; }
@@ -30,7 +28,7 @@ public class ParameterInspection
 	public bool IsOptional { get; set; }
 	
 	/// <summary>The information of the parameter's type</summary>
-	[BsonRef(nameof(QuickTypeInspection))] public QuickTypeInspection TypeInfo { get; set; }
+	public QuickTypeInspection TypeInfo { get; set; }
 	
 	/// <summary>The list of types used for the generic parameters</summary>
 	public List<string> GenericParameterDeclarations { get; set; } = new List<string>();

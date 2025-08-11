@@ -1,8 +1,6 @@
 
 namespace DGNet.Inspector;
 
-using LiteDB;
-
 using Mono.Cecil;
 using Mono.Collections.Generic;
 
@@ -12,7 +10,7 @@ public class GenericParameterInspection
 {
 	#region Properties
 	
-	[BsonId] public string Path { get; set; }
+	public string Path { get; set; }
 	
 	/// <summary>The unlocalized name of the generic parameter as it would appear in the IL code</summary>
 	public string UnlocalizedName { get; set; } = "";
@@ -21,7 +19,7 @@ public class GenericParameterInspection
 	public string Name { get; set; } = "";
 	
 	/// <summary>The list of constraints of what type the generic parameter should be</summary>
-	[BsonRef(nameof(QuickTypeInspection))] public List<QuickTypeInspection> Constraints { get; set; } = new List<QuickTypeInspection>();
+	public List<QuickTypeInspection> Constraints { get; set; } = new List<QuickTypeInspection>();
 	
 	/// <summary>A constructor meant for the class to be filled out later.</summary>
 	public GenericParameterInspection() {}

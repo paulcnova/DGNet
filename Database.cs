@@ -1,7 +1,7 @@
 
 namespace DGNet;
 
-using LiteDB;
+using Npgsql;
 
 using System.IO;
 
@@ -9,51 +9,56 @@ public sealed class Database : System.IDisposable
 {
 	#region Properties
 	
-	public LiteDatabase DB { get; private set; }
+	public string ErrorMessage { get; private set; }
+	
+	public NpgsqlDataSource Source { get; private set; }
+	public NpgsqlConnection Connection { get; private set; }
 	
 	#endregion // Properties
 	
 	#region Public Methods
 	
-	public ILiteCollection<T> Collection<T>(string collectionName = null)
-		=> string.IsNullOrEmpty(collectionName)
-			? this.DB.GetCollection<T>()
-			: this.DB.GetCollection<T>(collectionName);
-	
-	public ILiteQueryable<T> Query<T>(string collectionName = null)
-		=> string.IsNullOrEmpty(collectionName)
-			? this.DB.GetCollection<T>().Query()
-			: this.DB.GetCollection<T>(collectionName).Query();
-	
-	public bool Connect(string path)
+	public bool TryConnect(string path)
 	{
-		string fileName = Path.Combine(path, "temp.db");
-		
-		if(File.Exists(fileName)) { File.Delete(fileName); }
-		this.DB = new LiteDatabase(this.GetConnectionString(fileName));
+		try
+		{
+			string fileName = Path.Combine(path, "temp.db");
+			
+			if(File.Exists(fileName)) { File.Delete(fileName); }
+			
+			NpgsqlConnectionStringBuilder connectionStr = this.GetConnectionString(fileName);
+			NpgsqlDataSourceBuilder builder = new NpgsqlDataSourceBuilder(connectionStr.ConnectionString);
+			
+			this.Source = builder.UseJsonNet().Build();
+			this.Connection = this.Source.OpenConnection();
+		}
+		catch(System.Exception e)
+		{
+			this.ErrorMessage = e.ToString();
+			return false;
+		}
 		
 		return true;
 	}
 	
 	public void Dispose()
 	{
-		if(this.DB != null)
-		{
-			this.DB.Dispose();
-		}
+		if(this.Source != null) { this.Source.Dispose(); }
+		if(this.Connection != null) { this.Connection.Dispose(); }
 	}
 	
 	#endregion // Public Methods
 	
 	#region Private Methods
 	
-	private ConnectionString GetConnectionString(string fileName)
+	private NpgsqlConnectionStringBuilder GetConnectionString(string fileName)
 	{
-		ConnectionString str = new ConnectionString();
+		NpgsqlConnectionStringBuilder builder = new NpgsqlConnectionStringBuilder();
 		
-		str.Filename = fileName;
+		builder.Database = "postgres";
+		builder.Host = "localhost";
 		
-		return str;
+		return builder;
 	}
 	
 	#endregion // Private Methods

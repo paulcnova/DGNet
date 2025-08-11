@@ -37,9 +37,9 @@ public sealed class Engine : System.IDisposable
 	{
 		this.Phase = Phase.Init;
 		this.Database = new Database();
-		if(!this.Database.Connect(this.Environment.InputPath))
+		if(!this.Database.TryConnect(this.Environment.InputPath))
 		{
-			this.errorMessage = "Could not connect to LiteDB database.";
+			this.errorMessage = $"Could not connect to database.\n{this.Database.ErrorMessage}";
 			return false;
 		}
 		this.SetupData();
