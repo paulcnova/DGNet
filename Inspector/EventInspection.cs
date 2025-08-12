@@ -24,7 +24,6 @@ public sealed class EventInspection : Inspection
 		if(ignorePrivate && InspectorUtility.GetAccessorId(this.Adder.Accessor, ignorePrivate) == 0)
 		{
 			this.ShouldIgnore = true;
-			this.Path = this.GetXmlNameID();
 			return;
 		}
 		

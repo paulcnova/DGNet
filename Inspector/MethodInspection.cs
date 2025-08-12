@@ -445,7 +445,6 @@ public sealed class MethodInspection : Inspection
 		if(ignorePrivate && InspectorUtility.GetAccessorId(this.Accessor, ignorePrivate) == 0)
 		{
 			this.ShouldIgnore = true;
-			this.Path = this.GetXmlNameID();
 			return;
 		}
 		

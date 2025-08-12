@@ -33,7 +33,6 @@ public sealed class PropertyInspection : Inspection
 		if(!this.HasGetter && !this.HasSetter)
 		{
 			this.ShouldIgnore = true;
-			this.Path = this.GetXmlNameID();
 			return;
 		}
 		
@@ -88,7 +87,6 @@ public sealed class PropertyInspection : Inspection
 		if(!this.HasGetter && !this.HasSetter)
 		{
 			this.ShouldIgnore = true;
-			this.Path = this.GetXmlNameID();
 			return;
 		}
 		

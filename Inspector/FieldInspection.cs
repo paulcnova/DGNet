@@ -23,7 +23,6 @@ public sealed class FieldInspection : Inspection
 		if(ignorePrivate && InspectorUtility.GetAccessorId(this.Accessor, ignorePrivate) == 0)
 		{
 			this.ShouldIgnore = true;
-			this.Path = this.GetXmlNameID();
 			return;
 		}
 		
