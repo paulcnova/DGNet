@@ -35,8 +35,7 @@ public sealed class Engine : System.IDisposable
 	#region Public Methods
 	
 	public AssemblyDefinition GetAssemblyDefinition(string typeName)
-		=> this.AssemblyDefinitions[this.Database.Query<AssemblyMap>(typeName).AssemblyName];
-		// => this.AssemblyDefinitions[this.AssemblyMap[typeName]];
+		=> this.AssemblyDefinitions[this.Database.QueryOne<AssemblyMap>(typeName).AssemblyName];
 	
 	public bool Init()
 	{
@@ -54,7 +53,18 @@ public sealed class Engine : System.IDisposable
 	public bool Inspect()
 	{
 		this.Phase = Phase.Inspect;
-		// TODO: Add inspect logic
+		List<AssemblyTypes> asmTypes = this.Database.Query<AssemblyTypes>(this.Environment.AssembliesToInspect.ToArray());
+		
+		foreach(AssemblyTypes asmType in asmTypes)
+		{
+			foreach(string type in asmType.Types)
+			{
+				TypeInspection inspection = new TypeInspection(type, this);
+				
+				this.Database.Insert<Inspection>(type, inspection);
+			}
+		}
+		
 		return true;
 	}
 	

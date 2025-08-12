@@ -3,6 +3,7 @@ namespace DGNet;
 
 using Newtonsoft.Json;
 
+using System.Collections.Generic;
 using System.IO;
 
 public sealed class Database : System.IDisposable
@@ -45,11 +46,23 @@ public sealed class Database : System.IDisposable
 		File.Delete(path);
 	}
 	
-	public T Query<T>(string id)
+	public T QueryOne<T>(string id)
 	{
 		string path = this.GetPath<T>(id);
 		
 		return JsonConvert.DeserializeObject<T>(File.ReadAllText(path));
+	}
+	
+	public List<T> Query<T>(params string[] ids)
+	{
+		List<T> list = new List<T>();
+		
+		foreach(string id in ids)
+		{
+			list.Add(this.QueryOne<T>(id));
+		}
+		
+		return list;
 	}
 	
 	public bool Setup(string path)

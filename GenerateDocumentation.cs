@@ -4,6 +4,7 @@ namespace DGNet;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
+using System.Collections.Generic;
 using System.IO;
 
 public class GenerateDocumentation : Task
@@ -54,6 +55,7 @@ public class GenerateDocumentation : Task
 			Type = this.Type,
 			InputPath = this.InputPath,
 			IgnorePrivate = !this.IncludePrivate,
+			AssembliesToInspect = new List<string>() { this.TargetAssemblyNames },
 			Assemblies = asmFiles,
 			XmlFiles = xmlFiles,
 			
