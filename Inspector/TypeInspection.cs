@@ -111,6 +111,56 @@ public sealed class TypeInspection : Inspection
 	
 	#region Public Methods
 	
+	public List<FieldInspection> GetFields(Engine engine)
+	{
+		ProjectEnvironment environment = engine.Environment;
+		TypeDefinition type = engine.TypeDefinitions[this.TypeInfo.UnlocalizedName];
+		List<FieldInspection> fields = new List<FieldInspection>();
+		
+		fields.AddRange(FieldInspection.CreateArray(type, true, false, environment.IgnorePrivate));
+		fields.AddRange(FieldInspection.CreateArray(type, true, true, environment.IgnorePrivate));
+		
+		return fields;
+	}
+	
+	public List<PropertyInspection> GetProperties(Engine engine)
+	{
+		ProjectEnvironment environment = engine.Environment;
+		TypeDefinition type = engine.TypeDefinitions[this.TypeInfo.UnlocalizedName];
+		List<PropertyInspection> properties = new List<PropertyInspection>();
+		
+		properties.AddRange(PropertyInspection.CreateArray(type, true, false, environment.IgnorePrivate));
+		properties.AddRange(PropertyInspection.CreateArray(type, true, true, environment.IgnorePrivate));
+		
+		return properties;
+	}
+	
+	public List<EventInspection> GetEvents(Engine engine)
+	{
+		ProjectEnvironment environment = engine.Environment;
+		TypeDefinition type = engine.TypeDefinitions[this.TypeInfo.UnlocalizedName];
+		List<EventInspection> events = new List<EventInspection>();
+		
+		events.AddRange(EventInspection.CreateArray(type, true, false, environment.IgnorePrivate));
+		events.AddRange(EventInspection.CreateArray(type, true, true, environment.IgnorePrivate));
+		
+		return events;
+	}
+	
+	public List<MethodInspection> GetMethods(Engine engine)
+	{
+		ProjectEnvironment environment = engine.Environment;
+		TypeDefinition type = engine.TypeDefinitions[this.TypeInfo.UnlocalizedName];
+		List<MethodInspection> methods = new List<MethodInspection>();
+		
+		methods.AddRange(MethodInspection.CreateArray(type, false, false, true, ignorePrivate: environment.IgnorePrivate));
+		methods.AddRange(MethodInspection.CreateArray(type, true, false, ignorePrivate: environment.IgnorePrivate));
+		methods.AddRange(MethodInspection.CreateArray(type, true, true, ignorePrivate: environment.IgnorePrivate));
+		methods.AddRange(MethodInspection.CreateArray(type, true, true, false, true, ignorePrivate: environment.IgnorePrivate));
+		
+		return methods;
+	}
+	
 	public override string GetXmlNameID() => $"T:{this.TypeInfo.UnlocalizedName}";
 	
 	public static TypeDefinition SearchDefinition(string typePath, string[] assemblies, bool ignorePrivate = true)
