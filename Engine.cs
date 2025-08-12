@@ -2,7 +2,6 @@
 namespace DGNet;
 
 using DGNet.Inspector;
-using DGNet.Models;
 
 using Mono.Cecil;
 
@@ -140,21 +139,21 @@ public sealed class Engine : System.IDisposable
 					types[asmName].Add(type.FullName);
 					this.TypeDefinitions.Add(type.FullName, type);
 					this.AssemblyMap.Add(type.FullName, asmName);
-					this.Database
-						.Collection<AssemblyMap>()
-						.Insert(new AssemblyMap() {
-							TypeName = type.FullName,
-							AssemblyName = asmName,
-						});
+					// this.Database
+					// 	.Collection<AssemblyMap>()
+					// 	.Insert(new AssemblyMap() {
+					// 		TypeName = type.FullName,
+					// 		AssemblyName = asmName,
+					// 	});
 				}
 			}
 		}
-		this.Database
-			.Collection<AssemblyTypes>()
-			.Insert(types.ToList().ConvertAll(kv => new AssemblyTypes() {
-				AssemblyName = kv.Key,
-				Types = kv.Value,
-			}).ToArray());
+		// this.Database
+		// 	.Collection<AssemblyTypes>()
+		// 	.Insert(types.ToList().ConvertAll(kv => new AssemblyTypes() {
+		// 		AssemblyName = kv.Key,
+		// 		Types = kv.Value,
+		// 	}).ToArray());
 	}
 	
 	#endregion // Private Methods
