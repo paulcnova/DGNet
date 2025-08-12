@@ -32,6 +32,14 @@ public sealed class Database : System.IDisposable
 		return Path.Combine(path, $"{fileName.Replace('/', '.')}.json");
 	}
 	
+	public void InsertBulk<T>(params (string, T)[] items)
+	{
+		foreach((string, T) item in items)
+		{
+			this.Insert<T>(item.Item1, item.Item2);
+		}
+	}
+	
 	public void Insert<T>(string id, T item)
 	{
 		string path = this.GetPath<T>(id);

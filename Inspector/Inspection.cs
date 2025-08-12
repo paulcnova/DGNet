@@ -96,6 +96,11 @@ public abstract class Inspection
 	/// <summary>Set to true if the property has a setter method</summary>
 	public bool HasRemover { get; set; }
 	
+	// TODO: Use this ID to reference the database instead of having it directly on the object.
+	// TODO: Remove the property types.
+	public string AdderID { get; set; }
+	public string RemoveID { get; set; }
+	
 	/// <summary>Gets and sets the information of the event's adding method</summary>
 	public Inspection Adder { get; set; }
 	
@@ -107,6 +112,11 @@ public abstract class Inspection
 	
 	/// <summary>Set to true if the property has a setter method</summary>
 	public bool HasSetter { get; set; }
+	
+	// TODO: Use this ID to reference the database instead of having it directly on the object.
+	// TODO: Remove the property types.
+	public string GetterID { get; set; }
+	public string SetterID { get; set; }
 	
 	/// <summary>The getter method of the property (this can be null, you must check the hasGetter variable)</summary>
 	public Inspection Getter { get; set; }
@@ -144,10 +154,10 @@ public abstract class Inspection
 	/// <summary>The array of type information of interfaces that the type implements</summary>
 	public List<QuickTypeInspection> Interfaces { get; set; } = new List<QuickTypeInspection>();
 	
-	public List<Inspection> Fields { get; set; } = new List<Inspection>();
-	public List<Inspection> Properties { get; set; } = new List<Inspection>();
-	public List<Inspection> Events { get; set; } = new List<Inspection>();
-	public List<Inspection> Methods { get; set; } = new List<Inspection>();
+	// public List<Inspection> Fields { get; set; } = new List<Inspection>();
+	// public List<Inspection> Properties { get; set; } = new List<Inspection>();
+	// public List<Inspection> Events { get; set; } = new List<Inspection>();
+	// public List<Inspection> Methods { get; set; } = new List<Inspection>();
 	
 	#endregion // Properties
 	
