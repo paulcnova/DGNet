@@ -520,7 +520,7 @@ public sealed class MethodInspection : Inspection
 		}
 		this.FullDeclaration = $"{this.Declaration}{this.GenericDeclaration}({this.ParameterDeclaration})";
 		this.FullDeclaration += InspectorUtility.GetGenericParameterConstraints(this.GenericParameters);
-		this.Path = this.GetXmlNameID();
+		this.XPath = this.GetXmlNameID();
 	}
 	
 	/// <summary>Removes any unwanted methods from the given types of booleans</summary>

@@ -1,13 +1,13 @@
 
 namespace DGNet;
 
+using DGNet.Data;
 using DGNet.Inspector;
 using DGNet.Models;
 
 using Mono.Cecil;
 
 using System.Collections.Generic;
-using System.Linq;
 
 public sealed class Engine : System.IDisposable
 {
@@ -18,7 +18,7 @@ public sealed class Engine : System.IDisposable
 	private string errorMessage;
 	
 	public ProjectEnvironment Environment { get; private set; }
-	public Database Database { get; private set; }
+	public IDatabase Database { get; private set; }
 	
 	public Phase Phase { get; private set; } = Phase.Init;
 	public Dictionary<string, string> AssemblyMap { get; set; } = new Dictionary<string, string>();
@@ -40,10 +40,10 @@ public sealed class Engine : System.IDisposable
 	public bool Init()
 	{
 		this.Phase = Phase.Init;
-		this.Database = new Database();
+		this.Database = new FileDatabase();
 		if(!this.Database.Setup(this.Environment.InputPath))
 		{
-			this.errorMessage = $"Could not connect to database.\n{this.Database.ErrorMessage}";
+			this.errorMessage = $"Could not connect to database.\n{this.Database.GetErrorMessage()}";
 			return false;
 		}
 		this.SetupData();
@@ -61,7 +61,11 @@ public sealed class Engine : System.IDisposable
 			{
 				TypeInspection inspection = new TypeInspection(type, this);
 				
-				this.Database.Insert<Inspection>(type, inspection);
+				this.Database.Insert(type, inspection);
+				this.Database.InsertBulk(inspection.GetFields(this).ConvertAll(item => (item.Name, item as Inspection)).ToArray());
+				this.Database.InsertBulk(inspection.GetProperties(this).ConvertAll(item => (item.Name, item as Inspection)).ToArray());
+				this.Database.InsertBulk(inspection.GetEvents(this).ConvertAll(item => (item.Name, item as Inspection)).ToArray());
+				this.Database.InsertBulk(inspection.GetMethods(this).ConvertAll(item => (item.Name, item as Inspection)).ToArray());
 			}
 		}
 		

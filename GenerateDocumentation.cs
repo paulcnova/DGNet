@@ -17,6 +17,7 @@ public class GenerateDocumentation : Task
 	
 	public string ProjectName { get; set; }
 	public string TargetAssemblyNames { get; set; }
+	public string DatabaseType { get; set; } = "file";
 	public bool IncludePrivate { get; set; } = false;
 	
 	#endregion // Properties
@@ -56,6 +57,7 @@ public class GenerateDocumentation : Task
 			InputPath = this.InputPath,
 			IgnorePrivate = !this.IncludePrivate,
 			AssembliesToInspect = new List<string>() { this.TargetAssemblyNames },
+			DatabaseType = this.DatabaseType,
 			Assemblies = asmFiles,
 			XmlFiles = xmlFiles,
 			

@@ -7,7 +7,11 @@ public abstract class Inspection
 {
 	#region Properties
 	
-	public string Path { get; set; }
+	/// <summary>The path used for XML documentation.</summary>
+	public string XPath { get; set; }
+	
+	/// <summary>The path used for database indexing.</summary>
+	public string DPath { get; set; }
 	
 	/// <summary>The accessor of the method (such as internal, private, protected, public)</summary>
 	public string Accessor { get; set; }

@@ -60,7 +60,7 @@ public sealed class PropertyInspection : Inspection
 				? $"[{this.ParameterDeclaration}]"
 				: ""
 		)} {{ {this.GetSetDeclaration}}}";
-		this.Path = this.GetXmlNameID();
+		this.XPath = this.GetXmlNameID();
 	}
 	
 	public PropertyInspection(PropertyDefinition property, TypeDefinition type, TypeDefinition boundType, TypeReference boundTypeRef, bool ignorePrivate = true)
@@ -124,7 +124,7 @@ public sealed class PropertyInspection : Inspection
 				? $"[{this.ParameterDeclaration}]"
 				: ""
 		)} {{ {this.GetSetDeclaration}}}";
-		this.Path = this.GetXmlNameID();
+		this.XPath = this.GetXmlNameID();
 	}
 	
 	#endregion // Properties

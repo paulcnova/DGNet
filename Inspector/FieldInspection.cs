@@ -50,7 +50,7 @@ public sealed class FieldInspection : Inspection
 		)}{this.TypeInfo.Name} {this.Name}";
 		
 		if(this.IsConstant) { this.FullDeclaration += $" = {this.Value}"; }
-		this.Path = this.GetXmlNameID();
+		this.XPath = this.GetXmlNameID();
 	}
 	
 	#endregion // Properties

@@ -36,7 +36,7 @@ public sealed class EventInspection : Inspection
 				? $"{this.Modifier} "
 				: ""
 		)}{this.TypeInfo.Name} {this.Name}";
-		this.Path = this.GetXmlNameID();
+		this.XPath = this.GetXmlNameID();
 	}
 	
 	#endregion // Properties

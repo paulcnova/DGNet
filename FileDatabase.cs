@@ -1,12 +1,12 @@
 
-namespace DGNet;
+namespace DGNet.Data;
 
 using Newtonsoft.Json;
 
 using System.Collections.Generic;
 using System.IO;
 
-public sealed class Database : System.IDisposable
+public sealed class FileDatabase : IDatabase
 {
 	#region Properties
 	
@@ -42,6 +42,8 @@ public sealed class Database : System.IDisposable
 	
 	public void Insert<T>(string id, T item)
 	{
+		if(string.IsNullOrEmpty(id)) { return; }
+		
 		string path = this.GetPath<T>(id);
 		
 		File.WriteAllText(path, JsonConvert.SerializeObject(item));
@@ -52,6 +54,14 @@ public sealed class Database : System.IDisposable
 		string path = this.GetPath<T>(id);
 		
 		File.Delete(path);
+	}
+	
+	public void DeleteBulk<T>(params string[] ids)
+	{
+		foreach(string id in ids)
+		{
+			this.Delete<T>(id);
+		}
 	}
 	
 	public T QueryOne<T>(string id)
@@ -81,6 +91,8 @@ public sealed class Database : System.IDisposable
 		
 		return true;
 	}
+	
+	public string GetErrorMessage() => this.ErrorMessage;
 	
 	public void Dispose()
 	{
