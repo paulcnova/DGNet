@@ -2,6 +2,7 @@
 namespace DGNet;
 
 using DGNet.Inspector;
+using DGNet.Models;
 
 using Mono.Cecil;
 
@@ -33,13 +34,15 @@ public sealed class Engine : System.IDisposable
 	
 	#region Public Methods
 	
-	public AssemblyDefinition GetAssemblyDefinition(string typeName) => this.AssemblyDefinitions[this.AssemblyMap[typeName]];
+	public AssemblyDefinition GetAssemblyDefinition(string typeName)
+		=> this.AssemblyDefinitions[this.Database.Query<AssemblyMap>(typeName).AssemblyName];
+		// => this.AssemblyDefinitions[this.AssemblyMap[typeName]];
 	
 	public bool Init()
 	{
 		this.Phase = Phase.Init;
 		this.Database = new Database();
-		if(!this.Database.TryConnect(this.Environment.InputPath))
+		if(!this.Database.Setup(this.Environment.InputPath))
 		{
 			this.errorMessage = $"Could not connect to database.\n{this.Database.ErrorMessage}";
 			return false;
@@ -139,21 +142,19 @@ public sealed class Engine : System.IDisposable
 					types[asmName].Add(type.FullName);
 					this.TypeDefinitions.Add(type.FullName, type);
 					this.AssemblyMap.Add(type.FullName, asmName);
-					// this.Database
-					// 	.Collection<AssemblyMap>()
-					// 	.Insert(new AssemblyMap() {
-					// 		TypeName = type.FullName,
-					// 		AssemblyName = asmName,
-					// 	});
+					this.Database.Insert(type.FullName, new AssemblyMap()
+					{
+						TypeName = type.FullName,
+						AssemblyName = asmName,
+					});
 				}
 			}
+			this.Database.Insert(asmName, new AssemblyTypes()
+			{
+				AssemblyName = asmName,
+				Types = types[asmName],
+			});
 		}
-		// this.Database
-		// 	.Collection<AssemblyTypes>()
-		// 	.Insert(types.ToList().ConvertAll(kv => new AssemblyTypes() {
-		// 		AssemblyName = kv.Key,
-		// 		Types = kv.Value,
-		// 	}).ToArray());
 	}
 	
 	#endregion // Private Methods

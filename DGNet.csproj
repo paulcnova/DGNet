@@ -9,14 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="integration_testing/**/*.cs" />
+    
     <PackageReference Include="Microsoft.Build.Framework" Version="17.14.8" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.14.8" />
     <PackageReference Include="Mono.Cecil" Version="0.11.6" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Npgsql.Json.NET" Version="9.0.3" />
-    <PackageReference Include="Npgsql" Version="9.0.3" />
     
-    <Compile Remove="integration_testing/**/*.cs" />
   </ItemGroup>
   
   <Target Name="CopyTargetsToDistributionDirectory" AfterTargets="Build">
