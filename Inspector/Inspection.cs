@@ -1,15 +1,13 @@
 
 namespace DGNet.Inspector;
 
-using LiteDB;
-
 using System.Collections.Generic;
 
 public abstract class Inspection
 {
 	#region Properties
 	
-	[BsonId] public string Path { get; set; }
+	public string Path { get; set; }
 	
 	/// <summary>The accessor of the method (such as internal, private, protected, public)</summary>
 	public string Accessor { get; set; }
@@ -42,22 +40,22 @@ public abstract class Inspection
 	public bool IsVirtual { get; set; }
 	
 	/// <summary>The type that the method is implemented in</summary>
-	[BsonRef(nameof(QuickTypeInspection))] public QuickTypeInspection ImplementedType { get; set; }
+	public QuickTypeInspection ImplementedType { get; set; }
 	
 	/// <summary>Gets and sets the type information of the field's type</summary>
-	[BsonRef(nameof(QuickTypeInspection))] public QuickTypeInspection TypeInfo { get; set; }
+	public QuickTypeInspection TypeInfo { get; set; }
 	
 	/// <summary>The type that the method returns</summary>
-	[BsonRef(nameof(QuickTypeInspection))] public QuickTypeInspection ReturnType { get; set; }
+	public QuickTypeInspection ReturnType { get; set; }
 	
 	/// <summary>The attributes of the methods</summary>
-	[BsonRef(nameof(AttributeInspection))] public List<AttributeInspection> Attributes { get; set; } = new List<AttributeInspection>();
+	public List<AttributeInspection> Attributes { get; set; } = new List<AttributeInspection>();
 	
 	/// <summary>The parameters that the methods contains</summary>
-	[BsonRef(nameof(ParameterInspection))] public List<ParameterInspection> Parameters { get; set; } = new List<ParameterInspection>();
+	public List<ParameterInspection> Parameters { get; set; } = new List<ParameterInspection>();
 	
 	/// <summary>The generic parameters that the method uses</summary>
-	[BsonRef(nameof(GenericParameterInspection))] public List<GenericParameterInspection> GenericParameters { get; set; } = new List<GenericParameterInspection>();
+	public List<GenericParameterInspection> GenericParameters { get; set; } = new List<GenericParameterInspection>();
 	
 	/// <summary>The partial declaration of the method (without parameters) that can be found in the code</summary>
 	public string Declaration { get; set; }
@@ -99,10 +97,10 @@ public abstract class Inspection
 	public bool HasRemover { get; set; }
 	
 	/// <summary>Gets and sets the information of the event's adding method</summary>
-	[BsonRef(nameof(Inspection))] public Inspection Adder { get; set; }
+	public Inspection Adder { get; set; }
 	
 	/// <summary>Gets and sets the information of the event's removing method</summary>
-	[BsonRef(nameof(Inspection))] public Inspection Remover { get; set; }
+	public Inspection Remover { get; set; }
 	
 	/// <summary>Set to true if the property has a getter method</summary>
 	public bool HasGetter { get; set; }
@@ -111,10 +109,10 @@ public abstract class Inspection
 	public bool HasSetter { get; set; }
 	
 	/// <summary>The getter method of the property (this can be null, you must check the hasGetter variable)</summary>
-	[BsonRef(nameof(Inspection))] public Inspection Getter { get; set; }
+	public Inspection Getter { get; set; }
 	
 	/// <summary>The setter method of the property (this can be null, you must check the hasSetter variable)</summary>
-	[BsonRef(nameof(Inspection))] public Inspection Setter { get; set; }
+	public Inspection Setter { get; set; }
 	
 	/// <summary>The partial declaration of the property that determines the accessibility of the get and set methods as can be found in the code</summary>
 	public string GetSetDeclaration { get; set; }
@@ -141,15 +139,15 @@ public abstract class Inspection
 	public bool HasDeclaringType { get; set; }
 	
 	/// <summary>The information of the base type that the type inherits</summary>
-	[BsonRef(nameof(QuickTypeInspection))] public QuickTypeInspection BaseType { get; set; }
+	public QuickTypeInspection BaseType { get; set; }
 	
 	/// <summary>The array of type information of interfaces that the type implements</summary>
-	[BsonRef(nameof(QuickTypeInspection))] public List<QuickTypeInspection> Interfaces { get; set; } = new List<QuickTypeInspection>();
+	public List<QuickTypeInspection> Interfaces { get; set; } = new List<QuickTypeInspection>();
 	
-	[BsonRef(nameof(Inspection))] public List<Inspection> Fields { get; set; } = new List<Inspection>();
-	[BsonRef(nameof(Inspection))] public List<Inspection> Properties { get; set; } = new List<Inspection>();
-	[BsonRef(nameof(Inspection))] public List<Inspection> Events { get; set; } = new List<Inspection>();
-	[BsonRef(nameof(Inspection))] public List<Inspection> Methods { get; set; } = new List<Inspection>();
+	public List<Inspection> Fields { get; set; } = new List<Inspection>();
+	public List<Inspection> Properties { get; set; } = new List<Inspection>();
+	public List<Inspection> Events { get; set; } = new List<Inspection>();
+	public List<Inspection> Methods { get; set; } = new List<Inspection>();
 	
 	#endregion // Properties
 	

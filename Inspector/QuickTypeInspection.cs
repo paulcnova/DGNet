@@ -1,8 +1,6 @@
 
 namespace DGNet.Inspector;
 
-using LiteDB;
-
 using Mono.Cecil;
 
 using System.Collections.Generic;
@@ -13,7 +11,7 @@ public class QuickTypeInspection
 	
 	/// <summary>The name of the type as found within the library's IL code</summary>
 	/// <remarks>The character ` means that it has generic parameters</remarks>
-	[BsonId] public string UnlocalizedName { get; set; } = "";
+	public string UnlocalizedName { get; set; } = "";
 	
 	/// <summary>The name of the type that is slightly localized but not generically instanced</summary>
 	public string NonInstancedFullName { get; set; } = "";
@@ -34,7 +32,7 @@ public class QuickTypeInspection
 	public string NamespaceName { get; set; } = "";
 	
 	/// <summary>The list of generic parameters that the type contains</summary>
-	[BsonRef(nameof(GenericParameterInspection))] public List<GenericParameterInspection> GenericParameters { get; set; } = new List<GenericParameterInspection>();
+	public List<GenericParameterInspection> GenericParameters { get; set; } = new List<GenericParameterInspection>();
 	
 	/// <summary>Set to true if the type is a generic type</summary>
 	public bool IsGenericType { get; set; } = false;

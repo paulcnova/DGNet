@@ -1,8 +1,6 @@
 
 namespace DGNet.Inspector;
 
-using LiteDB;
-
 using Mono.Cecil;
 using Mono.Collections.Generic;
 
@@ -12,10 +10,10 @@ public class AttributeInspection
 {
 	#region Properties
 	
-	[BsonId] public string Path { get; set; }
+	public string Path { get; set; }
 	
 	/// <summary>Gets and sets the information of the type that the attribute is</summary>
-	[BsonRef(nameof(QuickTypeInspection))] public QuickTypeInspection TypeInfo { get; set; }
+	public QuickTypeInspection TypeInfo { get; set; }
 	
 	/// <summary>Gets and sets the list of constructor arguments that the attribute is declaring</summary>
 	public List<AttributeFieldData> ConstructorArgs { get; set; } = new List<AttributeFieldData>();
@@ -143,7 +141,7 @@ public class AttributeInspection
 		public string Value { get; set; }
 		
 		/// <summary>The information of the attribute field's type</summary>
-		[BsonRef(nameof(QuickTypeInspection))] public QuickTypeInspection TypeInfo { get; set; }
+		public QuickTypeInspection TypeInfo { get; set; }
 	}
 	
 	#endregion // Types
