@@ -5,7 +5,6 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
-    <DefineConstants>$(DefineConstants);USE_POSTGRESQL</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,7 +19,7 @@
     
   </ItemGroup>
   
-  <Target Name="CopyTargetsToDistributionDirectory" AfterTargets="Build">
+  <Target Name="CopyTargetsToDistributionDirectory" AfterTargets="Build" Condition="$(IsCI) != 'true'">
     <ItemGroup>
       <Distributable Include="$(MSBuildThisFileDirectory)/DGNet.targets" />
       <Distributable Include="$(OutDir)/$(AssemblyName).exe" />
