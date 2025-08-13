@@ -13,15 +13,27 @@ public static class Logger
 	
 	#region Public Methods
 	
-	public static void LogError(string str)
+	public static void Write(object obj)
 	{
 		if(LogHelper == null)
 		{
-			System.Console.WriteLine(str);
+			System.Console.WriteLine(obj);
 		}
 		else
 		{
-			LogHelper.LogError(str);
+			System.Console.WriteLine(obj);
+		}
+	}
+	
+	public static void LogError(object obj)
+	{
+		if(LogHelper == null)
+		{
+			System.Console.WriteLine(obj);
+		}
+		else
+		{
+			LogHelper.LogError($"{obj}");
 		}
 	}
 	
