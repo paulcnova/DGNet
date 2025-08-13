@@ -10,6 +10,12 @@ public sealed class PropertyInspection : Inspection
 {
 	#region Properties
 	
+	/// <summary>The getter method of the property (this can be null, you must check the hasGetter variable)</summary>
+	public Inspection Getter { get; set; }
+	
+	/// <summary>The setter method of the property (this can be null, you must check the hasSetter variable)</summary>
+	public Inspection Setter { get; set; }
+	
 	public PropertyInspection(PropertyDefinition property, bool ignorePrivate = true)
 	{
 		this.HasGetter = property.GetMethod != null;

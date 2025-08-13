@@ -10,6 +10,12 @@ public sealed class EventInspection : Inspection
 {
 	#region Properties
 	
+	/// <summary>Gets and sets the information of the event's adding method</summary>
+	public Inspection Adder { get; set; }
+	
+	/// <summary>Gets and sets the information of the event's removing method</summary>
+	public Inspection Remover { get; set; }
+	
 	/// <summary>Generates an event information from the given event definition</summary>
 	/// <param name="ev">The event definition to gather information from</param>
 	/// <param name="ignorePrivate">Set to false to include all the private properties</param>

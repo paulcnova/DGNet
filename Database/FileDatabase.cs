@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 
 public sealed class FileDatabase : IDatabase
 {
@@ -29,24 +30,30 @@ public sealed class FileDatabase : IDatabase
 		
 		this.EnsurePath(path);
 		
-		return Path.Combine(path, $"{fileName.Replace('/', '.')}.json");
+		System.Console.WriteLine(fileName);
+		
+		return Path.Combine(path, $"{Regex.Replace(fileName, @"[\\\/:\?\*""\<\>\|]", "-")}.json");
 	}
 	
-	public void InsertBulk<T>(params (string, T)[] items)
+	public void InsertBulk<T>(IEnumerable<(string, T)> items, DatabaseInsertCallback<T> callback)
 	{
 		foreach((string, T) item in items)
 		{
-			this.Insert<T>(item.Item1, item.Item2);
+			this.Insert<T>(item.Item1, item.Item2, callback);
 		}
 	}
 	
-	public void Insert<T>(string id, T item)
+	public void Insert<T>(string id, T item, DatabaseInsertCallback<T> callback)
 	{
 		if(string.IsNullOrEmpty(id)) { return; }
 		
 		string path = this.GetPath<T>(id);
 		
-		File.WriteAllText(path, JsonConvert.SerializeObject(item));
+		callback?.Invoke(id, item);
+		try
+		{
+			File.WriteAllText(path, JsonConvert.SerializeObject(item));
+		} catch {}
 	}
 	
 	public void Delete<T>(string id)
@@ -54,14 +61,6 @@ public sealed class FileDatabase : IDatabase
 		string path = this.GetPath<T>(id);
 		
 		File.Delete(path);
-	}
-	
-	public void DeleteBulk<T>(params string[] ids)
-	{
-		foreach(string id in ids)
-		{
-			this.Delete<T>(id);
-		}
 	}
 	
 	public T QueryOne<T>(string id)

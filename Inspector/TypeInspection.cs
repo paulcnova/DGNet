@@ -89,28 +89,14 @@ public sealed class TypeInspection : Inspection
 				: ""
 		)}{this.TypeInfo.Name}";
 		this.FullDeclaration = this.GetFullDeclaration(type);
-		
-		// TODO: Have an option to not be recursive.
-		// TODO: Move this into it's own field.
-		// this.Fields.AddRange(FieldInspection.CreateArray(type, true, false, ignorePrivate));
-		// this.Fields.AddRange(FieldInspection.CreateArray(type, true, true, ignorePrivate));
-		
-		// this.Properties.AddRange(PropertyInspection.CreateArray(type, true, false, ignorePrivate));
-		// this.Properties.AddRange(PropertyInspection.CreateArray(type, true, true, ignorePrivate));
-		
-		// this.Events.AddRange(EventInspection.CreateArray(type, true, false, ignorePrivate));
-		// this.Events.AddRange(EventInspection.CreateArray(type, true, true, ignorePrivate));
-		
-		// this.Methods.AddRange(MethodInspection.CreateArray(type, false, false, true, ignorePrivate: ignorePrivate));
-		// this.Methods.AddRange(MethodInspection.CreateArray(type, true, false, ignorePrivate: ignorePrivate));
-		// this.Methods.AddRange(MethodInspection.CreateArray(type, true, true, ignorePrivate: ignorePrivate));
-		// this.Methods.AddRange(MethodInspection.CreateArray(type, true, true, false, true, ignorePrivate: ignorePrivate));
+		this.XPath = this.GetXmlNameID();
 	}
 	
 	#endregion // Properties
 	
 	#region Public Methods
 	
+	// TODO: Have an option to not be recursive.
 	public List<FieldInspection> GetFields(Engine engine)
 	{
 		ProjectEnvironment environment = engine.Environment;

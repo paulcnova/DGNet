@@ -61,11 +61,72 @@ public sealed class Engine : System.IDisposable
 			{
 				TypeInspection inspection = new TypeInspection(type, this);
 				
-				this.Database.Insert(type, inspection);
-				this.Database.InsertBulk(inspection.GetFields(this).ConvertAll(item => (item.Name, item as Inspection)).ToArray());
-				this.Database.InsertBulk(inspection.GetProperties(this).ConvertAll(item => (item.Name, item as Inspection)).ToArray());
-				this.Database.InsertBulk(inspection.GetEvents(this).ConvertAll(item => (item.Name, item as Inspection)).ToArray());
-				this.Database.InsertBulk(inspection.GetMethods(this).ConvertAll(item => (item.Name, item as Inspection)).ToArray());
+				this.Database.InsertBulk(
+					inspection.GetFields(this)
+						.ConvertAll(item => (item.XPath, item as Inspection))
+						.ToArray(),
+					(id, item) => inspection.FieldIDs.Add(id)
+				);
+				this.Database.InsertBulk(
+					inspection.GetProperties(this)
+						.ConvertAll(item => (item.XPath, item as Inspection))
+						.ToArray(),
+					(id, item) => {
+						PropertyInspection property = item as PropertyInspection;
+						
+						if(property.HasGetter)
+						{
+							this.Database.Insert(
+								property.Getter.XPath,
+								property.Getter,
+								(getterID, getter) => property.GetterID = getterID
+							);
+						}
+						if(property.HasSetter)
+						{
+							this.Database.Insert(
+								property.Setter.XPath,
+								property.Setter,
+								(setterID, setter) => property.SetterID = setterID
+							);
+						}
+						inspection.PropertyIDs.Add(id);
+					}
+				);
+				this.Database.InsertBulk(
+					inspection.GetEvents(this)
+						.ConvertAll(item => (item.XPath, item as Inspection))
+						.ToArray(),
+					(id, item) => {
+						EventInspection ev = item as EventInspection;
+						
+						if(ev.HasAdder)
+						{
+							this.Database.Insert(
+								ev.Adder.XPath,
+								ev.Adder,
+								(adderID, adder) => ev.AdderID = adderID
+							);
+						}
+						if(ev.HasRemover)
+						{
+							this.Database.Insert(
+								ev.Remover.XPath,
+								ev.Remover,
+								(removerID, remover) => ev.RemoverID = removerID
+							);
+						}
+						inspection.EventIDs.Add(id);
+					}
+				);
+				this.Database.InsertBulk(
+					inspection.GetMethods(this)
+						.ConvertAll(item => (item.XPath, item as Inspection))
+						.ToArray(),
+					(id, item) => inspection.MethodIDS.Add(id)
+				);
+				
+				this.Database.Insert(inspection.XPath, inspection);
 			}
 		}
 		

@@ -100,16 +100,9 @@ public abstract class Inspection
 	/// <summary>Set to true if the property has a setter method</summary>
 	public bool HasRemover { get; set; }
 	
-	// TODO: Use this ID to reference the database instead of having it directly on the object.
-	// TODO: Remove the property types.
 	public string AdderID { get; set; }
-	public string RemoveID { get; set; }
 	
-	/// <summary>Gets and sets the information of the event's adding method</summary>
-	public Inspection Adder { get; set; }
-	
-	/// <summary>Gets and sets the information of the event's removing method</summary>
-	public Inspection Remover { get; set; }
+	public string RemoverID { get; set; }
 	
 	/// <summary>Set to true if the property has a getter method</summary>
 	public bool HasGetter { get; set; }
@@ -117,16 +110,9 @@ public abstract class Inspection
 	/// <summary>Set to true if the property has a setter method</summary>
 	public bool HasSetter { get; set; }
 	
-	// TODO: Use this ID to reference the database instead of having it directly on the object.
-	// TODO: Remove the property types.
 	public string GetterID { get; set; }
+	
 	public string SetterID { get; set; }
-	
-	/// <summary>The getter method of the property (this can be null, you must check the hasGetter variable)</summary>
-	public Inspection Getter { get; set; }
-	
-	/// <summary>The setter method of the property (this can be null, you must check the hasSetter variable)</summary>
-	public Inspection Setter { get; set; }
 	
 	/// <summary>The partial declaration of the property that determines the accessibility of the get and set methods as can be found in the code</summary>
 	public string GetSetDeclaration { get; set; }
@@ -158,10 +144,10 @@ public abstract class Inspection
 	/// <summary>The array of type information of interfaces that the type implements</summary>
 	public List<QuickTypeInspection> Interfaces { get; set; } = new List<QuickTypeInspection>();
 	
-	// public List<Inspection> Fields { get; set; } = new List<Inspection>();
-	// public List<Inspection> Properties { get; set; } = new List<Inspection>();
-	// public List<Inspection> Events { get; set; } = new List<Inspection>();
-	// public List<Inspection> Methods { get; set; } = new List<Inspection>();
+	public List<string> FieldIDs { get; set; } = new List<string>();
+	public List<string> PropertyIDs { get; set; } = new List<string>();
+	public List<string> EventIDs { get; set; } = new List<string>();
+	public List<string> MethodIDS { get; set; } = new List<string>();
 	
 	#endregion // Properties
 	
