@@ -22,8 +22,10 @@ public sealed class ProjectEnvironment
 	
 	#region Public Methods
 	
-	public IDatabase CreateDatabase() => this.DatabaseType switch
+	public IDatabase CreateDatabase() => this.DatabaseType?.ToLower() switch
 	{
+		"litedb" => new LiteDBDatabase(),
+		"memory" => new MemoryDatabase(),
 		"file" => new FileDatabase(),
 		_ => new MemoryDatabase(),
 	};

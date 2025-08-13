@@ -21,6 +21,7 @@
 		<DGType Condition="$(DGType) == ''">static-html</DGType>
 		<DGInput Condition="$(DGInput) == ''">$(OutDir)</DGInput>
 		<DGOutput Condition="$(DGOutput) == ''">$(OutDir)\docs\</DGOutput>
+		<DGDatabaseType Condition="$(DGDatabaseType) == ''"></DGDatabaseType>
 		<!-- <DGTemplate>
 			<Base Condition="$(DGTemplate.Base) == ''"></Base>
 			<Type Condition="$(DGTemplate.Type) == ''"></Type>
@@ -53,6 +54,7 @@
 		OutputPath="$(DGOutput)"
 		TargetAssemblyNames="$(DGTargets)"
 		Type="$(DGType)"
+		DatabaseType="$(DGDatabaseType)"
 	/>
 		<!-- Template="$(DGTemplate)" -->
   </Target>
