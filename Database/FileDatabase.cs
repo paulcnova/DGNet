@@ -11,6 +11,7 @@ public sealed class FileDatabase : IDatabase
 {
 	#region Properties
 	
+	public Dictionary<System.Type, SerializationMap> Serialization { get; set; }
 	public string ErrorMessage { get; private set; }
 	public string DBPath { get; private set; }
 	public bool DeleteOnExit { get; private set; }
@@ -50,6 +51,11 @@ public sealed class FileDatabase : IDatabase
 		string path = this.GetPath<T>(id);
 		
 		callback?.Invoke(id, item);
+		if(this.Serialization.TryGetValue(typeof(T), out SerializationMap map))
+		{
+			map.Serialize.DynamicInvoke(this, item);
+			(map.Serialize as DatabaseSerialization<T>).Invoke(this, id, item);
+		}
 		try
 		{
 			File.WriteAllText(path, JsonConvert.SerializeObject(item));
@@ -66,8 +72,14 @@ public sealed class FileDatabase : IDatabase
 	public T QueryOne<T>(string id)
 	{
 		string path = this.GetPath<T>(id);
+		T item = JsonConvert.DeserializeObject<T>(File.ReadAllText(path));
 		
-		return JsonConvert.DeserializeObject<T>(File.ReadAllText(path));
+		if(this.Serialization.TryGetValue(typeof(T), out SerializationMap map))
+		{
+			(map.Deserialize as DatabaseSerialization<T>).Invoke(this, id, item);
+		}
+		
+		return item;
 	}
 	
 	public List<T> Query<T>(params string[] ids)
