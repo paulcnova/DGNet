@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DGNet", "DGNet.csproj", "{B965A186-03E7-45F1-A50D-C27493194965}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DGNet.Test", "Test\DGNet.Test.csproj", "{A8149B06-A875-4E30-8FE9-937780FA65D7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{B965A186-03E7-45F1-A50D-C27493194965}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B965A186-03E7-45F1-A50D-C27493194965}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B965A186-03E7-45F1-A50D-C27493194965}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8149B06-A875-4E30-8FE9-937780FA65D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8149B06-A875-4E30-8FE9-937780FA65D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8149B06-A875-4E30-8FE9-937780FA65D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8149B06-A875-4E30-8FE9-937780FA65D7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

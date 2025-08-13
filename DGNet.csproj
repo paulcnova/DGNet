@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <Compile Remove="integration_testing/**/*.cs" />
+    <Compile Remove="Test/**/*.cs" />
     
     <PackageReference Include="Microsoft.Build.Framework" Version="17.14.8" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.14.8" />
