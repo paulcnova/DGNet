@@ -8,6 +8,7 @@ using DGNet.Models;
 using Mono.Cecil;
 
 using System.Collections.Generic;
+using System.Xml;
 
 public sealed class Engine : System.IDisposable
 {
@@ -154,7 +155,31 @@ public sealed class Engine : System.IDisposable
 	public bool Parse()
 	{
 		this.Phase = Phase.Parse;
-		// TODO: Add parse logic
+		XmlDocument document = new XmlDocument();
+		
+		foreach(string file in this.Environment.XmlFiles)
+		{
+			document.Load(file);
+			foreach(XmlElement member in document.GetElementsByTagName("member"))
+			{
+				XContent content = new XContent();
+				
+				content.XPath = member.GetAttribute("name");
+				content.InheritDoc = member["inheritdoc"]?.OuterXml;
+				content.Includes = member["includes"]?.OuterXml;
+				content.Summary = member["summary"]?.OuterXml;
+				content.Param = member["param"]?.OuterXml;
+				content.Returns = member["returns"]?.OuterXml;
+				content.Remarks = member["remarks"]?.OuterXml;
+				content.Value = member["value"]?.OuterXml;
+				content.Exception = member["exception"]?.OuterXml;
+				content.TypeParam = member["typeparam"]?.OuterXml;
+				content.See = member["see"]?.OuterXml;
+				content.SeeAlso = member["seealso"]?.OuterXml;
+				
+				this.Database.Insert<XContent>(content.XPath, content);
+			}
+		}
 		return true;
 	}
 	

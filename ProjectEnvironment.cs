@@ -27,7 +27,7 @@ public sealed class ProjectEnvironment
 		"litedb" => new LiteDBDatabase(),
 		"memory" => new MemoryDatabase(),
 		"file" => new FileDatabase(),
-		_ => new MemoryDatabase(),
+		_ => new LiteDBDatabase(),
 	};
 	
 	#endregion // Public Methods

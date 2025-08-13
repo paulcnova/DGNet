@@ -56,19 +56,11 @@ public class GenerateDocumentation : Task
 			Type = this.Type,
 			InputPath = this.InputPath,
 			IgnorePrivate = !this.IncludePrivate,
+			// TODO: Figure out how to split it apart.
 			AssembliesToInspect = new List<string>() { this.TargetAssemblyNames },
 			DatabaseType = this.DatabaseType,
 			Assemblies = asmFiles,
 			XmlFiles = xmlFiles,
-			
-			// ProjectName = this.ProjectName,
-			// AssemblyPath = this.AssembliesPath,
-			// OriginalAssembly = this.OriginalAssembly,
-			// Assemblies = new List<string>(asmFiles),
-			// XmlFiles = new List<string>(xmlFiles),
-			// GeneratorType = this.GeneratorType,
-			// OutputDirectory = this.OutputDirectory,
-			// IncludePrivate = this.IncludePrivate,
 		};
 	}
 	

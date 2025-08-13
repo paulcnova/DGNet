@@ -11,7 +11,7 @@ public sealed class FileDatabase : IDatabase
 {
 	#region Properties
 	
-	public Dictionary<System.Type, SerializationMap> Serialization { get; set; }
+	public Dictionary<System.Type, SerializationMap> Serialization { get; set; } = new Dictionary<System.Type, SerializationMap>();
 	public string ErrorMessage { get; private set; }
 	public string DBPath { get; private set; }
 	public bool DeleteOnExit { get; private set; }

@@ -11,7 +11,7 @@ public sealed class LiteDBDatabase : IDatabase
 	
 	private string errorMessage;
 	
-	public Dictionary<System.Type, SerializationMap> Serialization { get; set; }
+	public Dictionary<System.Type, SerializationMap> Serialization { get; set; } = new Dictionary<System.Type, SerializationMap>();
 	public LiteDatabase DB { get; set; }
 	
 	#endregion // Properties
@@ -29,7 +29,7 @@ public sealed class LiteDBDatabase : IDatabase
 	public void Insert<T>(string id, T item, DatabaseInsertCallback<T> callback)
 	{
 		callback?.Invoke(id, item);
-		this.DB.GetCollection<T>().Insert(id, item);
+		try { this.DB.GetCollection<T>().Insert(id, item); } catch {}
 	}
 	
 	public void Delete<T>(string id) => this.DB.GetCollection<T>().Delete(id);
