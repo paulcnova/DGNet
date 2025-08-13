@@ -17,7 +17,7 @@ public class GenerateDocumentation : Task
 	
 	public string ProjectName { get; set; }
 	public string TargetAssemblyNames { get; set; }
-	public string DatabaseType { get; set; } = "file";
+	public string DatabaseType { get; set; } = "memory";
 	public bool IncludePrivate { get; set; } = false;
 	
 	#endregion // Properties

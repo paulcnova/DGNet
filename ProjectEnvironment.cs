@@ -1,6 +1,8 @@
 
 namespace DGNet;
 
+using DGNet.Data;
+
 using System.Collections.Generic;
 
 public sealed class ProjectEnvironment
@@ -17,4 +19,14 @@ public sealed class ProjectEnvironment
 	public bool IgnorePrivate { get; set; }
 	
 	#endregion // Properties
+	
+	#region Public Methods
+	
+	public IDatabase CreateDatabase() => this.DatabaseType switch
+	{
+		"file" => new FileDatabase(),
+		_ => new MemoryDatabase(),
+	};
+	
+	#endregion // Public Methods
 }

@@ -34,6 +34,10 @@ public interface IDatabase : System.IDisposable
 	
 	string GetErrorMessage();
 	bool Setup(string path);
+	void Insert<T>(string id, T item, DatabaseInsertCallback<T> callback);
+	void Delete<T>(string id);
+	T QueryOne<T>(string id);
+	
 	void Serialize<T>(System.Action<IDatabase, string, T> serialize, System.Action<IDatabase, string, T> deserialize)
 	{
 		System.Type type = typeof(T);
@@ -45,13 +49,17 @@ public interface IDatabase : System.IDisposable
 	}
 	
 	void Insert<T>(string id, T item) => this.Insert<T>(id, item, null);
-	void Insert<T>(string id, T item, DatabaseInsertCallback<T> callback);
 	
 	void InsertBulk<T>(params (string, T)[] items) => this.InsertBulk<T>(items, null);
 	void InsertBulk<T>(IEnumerable<(string, T)> items) => this.InsertBulk<T>(items, null);
-	void InsertBulk<T>(IEnumerable<(string, T)> items, DatabaseInsertCallback<T> callback);
+	void InsertBulk<T>(IEnumerable<(string, T)> items, DatabaseInsertCallback<T> callback)
+	{
+		foreach((string, T) item in items)
+		{
+			this.Insert<T>(item.Item1, item.Item2, callback);
+		}
+	}
 	
-	void Delete<T>(string id);
 	void DeleteBulk<T>(params string[] ids)
 	{
 		foreach(string id in ids)
@@ -60,8 +68,17 @@ public interface IDatabase : System.IDisposable
 		}
 	}
 	
-	T QueryOne<T>(string id);
-	List<T> Query<T>(params string[] ids);
+	List<T> Query<T>(params string[] ids)
+	{
+		List<T> items = new List<T>();
+		
+		foreach(string id in ids)
+		{
+			items.Add(this.QueryOne<T>(id));
+		}
+		
+		return items;
+	}
 	
 	#endregion // Public Methods
 }

@@ -40,7 +40,7 @@ public sealed class Engine : System.IDisposable
 	public bool Init()
 	{
 		this.Phase = Phase.Init;
-		this.Database = new FileDatabase();
+		this.Database = this.Environment.CreateDatabase();
 		if(!this.Database.Setup(this.Environment.InputPath))
 		{
 			this.errorMessage = $"Could not connect to database.\n{this.Database.GetErrorMessage()}";
