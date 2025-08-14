@@ -4,6 +4,7 @@ namespace DGNet.Data;
 using LiteDB;
 
 using System.Collections.Generic;
+using System.IO;
 
 public sealed class LiteDBDatabase : IDatabase
 {
@@ -22,6 +23,8 @@ public sealed class LiteDBDatabase : IDatabase
 	
 	public bool Setup(string path)
 	{
+		if(File.Exists(Path.Combine(path, "temp.db"))) { File.Delete(Path.Combine(path, "temp.db")); }
+		
 		this.DB = new LiteDatabase(this.GetConnectionString(path));
 		return true;
 	}
